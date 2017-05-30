@@ -3,6 +3,8 @@ import re
 import random
 import csv
 
+from fuzzywuzzy import process
+
 import client_token
 
 client = discord.Client()
@@ -10,6 +12,10 @@ client = discord.Client()
 spells = open('dnd_5e_spells_edit.csv', 'r')
 spell_reader = csv.reader(spells)
 
+list_of_spells = []
+
+for row in spell_reader:
+    list_of_spells.append(row[1])
 
 @client.event
 async def on_message(message):
@@ -69,9 +75,13 @@ def get_spell(message):
 {}{}
 '''.format(name, row[6], ritual, row[7], row[8], row[10], components, row[9], description, higher_levels)
     if return_spell == '':
-        return 'Spell not found.'
-    else:
-        return return_spell
+        return_spell, score = process.extractOne(spell, list_of_spells, score_cutoff=55)
+        print(return_spell)
+        if return_spell is None:
+            return_spell = 'Spell not found.'
+        else:
+            return_spell = 'Did you mean ' + return_spell + '?'
+    return return_spell
 
 
 def roll(message):
