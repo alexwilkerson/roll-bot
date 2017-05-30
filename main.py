@@ -1,10 +1,14 @@
 import discord
 import re
 import random
+import csv
 
 import client_token
 
 client = discord.Client()
+
+spells = open('dnd_5e_spells_edit.csv', 'r')
+spell_reader = csv.reader(spells)
 
 
 @client.event
@@ -17,6 +21,13 @@ async def on_message(message):
         msg = roll(message)
         if msg != 'ERROR':
             await client.send_message(message.channel, msg)
+    if message.content.startswith('!spell'):
+        msg = get_spell(message)
+        if msg != 'ERROR':
+            while len(msg) > 2000:
+                await client.send_message(message.channel, msg[:2000])
+                msg = msg[2000:]
+            await client.send_message(message.channel, msg)
 
 
 @client.event
@@ -25,6 +36,42 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
+
+
+def get_spell(message):
+    split_command = message.content.split()
+    if len(split_command) == 1:
+        return 'ERROR'
+    spell = ' '.join(split_command[1:]).strip()
+    print(spell)
+    return_spell = ''
+    spells.seek(0)
+    for row in spell_reader:
+        if spell.lower() == row[1].lower():
+            # return_spell = 'Found Spell: {}'.format(row[1])
+            name = row[1]
+            components = ''
+            description = row[12].replace('<br> ', '\n\t')
+            ritual = ''
+            if row[2] == '1':
+                ritual = ' (ritual)'
+            if row[11] != '':
+                components = '(' + row[11] + ')'
+            higher_levels = ''
+            if row[13] != '':
+                higher_levels = '\n\t***At Higher Levels.*** ' + row[13].replace('<br> ', '\n\t')
+            return_spell = '''__**{}**__
+*{}{}*
+**Casting Time:** {}
+**Range:** {}
+**Components:** {} {}
+**Duration:** {}
+{}{}
+'''.format(name, row[6], ritual, row[7], row[8], row[10], components, row[9], description, higher_levels)
+    if return_spell == '':
+        return 'Spell not found.'
+    else:
+        return return_spell
 
 
 def roll(message):
