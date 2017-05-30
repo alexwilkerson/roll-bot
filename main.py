@@ -75,12 +75,12 @@ def get_spell(message):
 {}{}
 '''.format(name, row[6], ritual, row[7], row[8], row[10], components, row[9], description, higher_levels)
     if return_spell == '':
-        return_spell = process.extractOne(spell, list_of_spells, score_cutoff=55)
+        return_spell = process.extractOne(spell, list_of_spells, score_cutoff=70)
         print(return_spell)
         if return_spell is None:
             return_spell = 'Spell not found.'
         else:
-            return_spell = 'Did you mean ' + return_spell[0] + '?'
+            return_spell = 'Did you mean *' + return_spell[0] + '?*'
     return return_spell
 
 
